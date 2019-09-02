@@ -265,6 +265,9 @@ struct layer {
     int classfix;
     int absolute;
 
+    int part;
+    int whole_classes;
+
     int onlyforward;
     int stopbackward;
     int dontload;
