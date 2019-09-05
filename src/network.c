@@ -634,6 +634,8 @@ int num_detections(network *net, float thresh)
     for (i = 0; i < net->n; ++i) {
         layer l = net->layers[i];
         if (l.type == YOLO) {
+        //if (l.type == YOLO && l.whole) {
+        //if (l.type == YOLO && l.part) {
             s += yolo_num_detections(l, thresh);
         }
         if (l.type == DETECTION || l.type == REGION) {
@@ -690,6 +692,8 @@ void fill_network_boxes(network *net, int w, int h, float thresh, float hier, in
     for (j = 0; j < net->n; ++j) {
         layer l = net->layers[j];
         if (l.type == YOLO) {
+        //if (l.type == YOLO && l.whole) {
+        //if (l.type == YOLO && l.part) {
             int count = get_yolo_detections(l, w, h, net->w, net->h, thresh, map, relative, dets, letter);
             dets += count;
             if (prev_classes < 0) prev_classes = l.classes;

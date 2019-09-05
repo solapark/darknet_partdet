@@ -11,7 +11,7 @@
 #include <stdlib.h>
 
 //layer make_yolo_layer(int batch, int w, int h, int n, int total, int *mask, int classes, int max_boxes)
-layer make_yolo_layer(int batch, int w, int h, int n, int total, int *mask, int classes, int max_boxes, int part, int whole_classes)
+layer make_yolo_layer(int batch, int w, int h, int n, int total, int *mask, int classes, int max_boxes, int part, int whole, int whole_classes)
 {
     int i;
     layer l = { (LAYER_TYPE)0 };
@@ -71,6 +71,7 @@ layer make_yolo_layer(int batch, int w, int h, int n, int total, int *mask, int 
 #endif
 
     l.part = part;
+    l.whole = whole;
     l.whole_classes = whole_classes;
 
     fprintf(stderr, "yolo\n");
@@ -152,6 +153,7 @@ float delta_yolo_box(box truth, float *x, float *biases, int n, int index, int i
 
 void delta_yolo_class(float *output, float *delta, int index, int class_id, int classes, int stride, float *avg_cat, int focal_loss)
 {
+    //printf("delta_yolo_class : class_id = %d\n", class_id);
     int n;
     if (delta[index + stride*class_id]){
         delta[index + stride*class_id] = 1 - output[index + stride*class_id];
@@ -206,6 +208,7 @@ static box float_to_box_stride(float *f, int stride)
 
 void forward_yolo_layer(const layer l, network_state state)
 {
+    //printf("forward_yolo_part = %d\n", l.part);
     int i,j,b,t,n;
     memcpy(l.output, state.input, l.outputs*l.batch*sizeof(float));
 
@@ -243,10 +246,10 @@ void forward_yolo_layer(const layer l, network_state state)
                         box truth = float_to_box_stride(state.truth + t*(4 + 1) + b*l.truths, 1);
                         int class_id = state.truth[t*(4 + 1) + b*l.truths + 4];
                         //if (class_id >= l.classes) {
-                        if ( (!l.part && class_id > l.classes) || 
-                            (l.part && (class_id < l.whole_classes || class_id > l.classes + l.whole_classes )) ) {
+                        if ( (!l.part && class_id >= l.whole_classes) || 
+                            (l.part && (class_id < l.whole_classes || class_id >= l.classes + l.whole_classes )) ) {
                             //printf(" Warning: in txt-labels class_id=%d >= classes=%d in cfg-file. In txt-labels class_id should be [from 0 to %d] \n", class_id, l.classes, l.classes - 1);
-                            getchar();
+                            //getchar();
                             continue; // if label contains class_id more than number of classes in the cfg-file
                         }
                         if(!truth.x) break;  // continue;
@@ -279,8 +282,8 @@ void forward_yolo_layer(const layer l, network_state state)
             box truth = float_to_box_stride(state.truth + t*(4 + 1) + b*l.truths, 1);
             int class_id = state.truth[t*(4 + 1) + b*l.truths + 4];
             //if (class_id >= l.classes) continue; // if label contains class_id more than number of classes in the cfg-file
-            if ( (!l.part && class_id > l.classes) || 
-                (l.part && (class_id < l.whole_classes || class_id > l.classes + l.whole_classes )) ) {
+            if ( (!l.part && class_id >= l.whole_classes) || 
+                (l.part && (class_id < l.whole_classes || class_id >= l.classes + l.whole_classes )) ) {
                 continue;
             }
 
@@ -325,7 +328,7 @@ void forward_yolo_layer(const layer l, network_state state)
         }
     }
     *(l.cost) = pow(mag_array(l.delta, l.outputs * l.batch), 2);
-    printf("Region %d Avg IOU: %f, Class: %f, Obj: %f, No Obj: %f, .5R: %f, .75R: %f,  count: %d\n", state.index, avg_iou/count, avg_cat/class_count, avg_obj/count, avg_anyobj/(l.w*l.h*l.n*l.batch), recall/count, recall75/count, count);
+    //printf("Region %d Avg IOU: %f, Class: %f, Obj: %f, No Obj: %f, .5R: %f, .75R: %f,  count: %d\n", state.index, avg_iou/count, avg_cat/class_count, avg_obj/count, avg_anyobj/(l.w*l.h*l.n*l.batch), recall/count, recall75/count, count);
 }
 
 void backward_yolo_layer(const layer l, network_state state)
@@ -492,6 +495,7 @@ void forward_yolo_layer_gpu(const layer l, network_state state)
 
 void backward_yolo_layer_gpu(const layer l, network_state state)
 {
+    //printf("backward_yolo\n");
     axpy_ongpu(l.batch*l.inputs, 1, l.delta_gpu, 1, state.delta, 1);
 }
 #endif

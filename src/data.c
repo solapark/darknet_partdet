@@ -363,7 +363,8 @@ void fill_truth_detection(const char *path, int num_boxes, float *truth, int cla
         //if ((w < 0.001F || h < 0.001F)) continue;
         // if truth (box for object) is smaller than 1x1 pix
         char buff[256];
-        if (id >= classes) {
+        //if (id >= classes) {
+        if (id >= classes + 10) {
             printf("\n Wrong annotation: class_id = %d. But class_id should be [from 0 to %d] \n", id, (classes-1));
             sprintf(buff, "echo %s \"Wrong annotation: class_id = %d. But class_id should be [from 0 to %d]\" >> bad_label.list", labelpath, id, (classes-1));
             system(buff);

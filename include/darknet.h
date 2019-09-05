@@ -266,6 +266,7 @@ struct layer {
     int absolute;
 
     int part;
+    int whole;
     int whole_classes;
 
     int onlyforward;

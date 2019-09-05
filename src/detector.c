@@ -144,6 +144,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
     //printf(" imgs = %d \n", imgs);
 
     pthread_t load_thread = load_data(args);
+
     double time;
     int count = 0;
     //while(i*imgs < N*120){
@@ -199,7 +200,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
         save_image(im, "truth11");
         */
 
-        printf("Loaded: %lf seconds\n", (what_time_is_it_now() - time));
+        //printf("Loaded: %lf seconds\n", (what_time_is_it_now() - time));
 
         time = what_time_is_it_now();
         float loss = 0;
@@ -279,7 +280,8 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
         }
 
         /*
-        if (i >= (iter_save_last + 100) || i % 100 == 0) {
+        if (i >= (iter_save_last + 20) || i % 20 == 0) {
+        //if (i >= (iter_save_last + 100) || i % 100 == 0) {
             iter_save_last = i;
 #ifdef GPU
             if (ngpus != 1) sync_nets(nets, ngpus, 0);
@@ -1271,7 +1273,7 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
                 if (input[strlen(input) - 1] == 0x0d) input[strlen(input) - 1] = 0;
         }
         else {
-            //printf("Enter Image Path: ");
+            printf("Enter Image Path: \n");
             fflush(stdout);
             input = fgets(input, 256, stdin);
             if (!input) break;
